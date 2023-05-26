@@ -34,6 +34,7 @@ warnings.filterwarnings("ignore")
 
 ## Online Tumor Generation
 from TumorGenerated import TumorGenerated
+from TumorGenerated.TumorGenerated import PancreaticTumorGenerated
 
 import argparse
 parser = argparse.ArgumentParser(description='brats21 segmentation testing')
@@ -257,7 +258,8 @@ def _get_transform(args):
             transforms.AddChanneld(keys=["image", "label"]),
             transforms.Orientationd(keys=["image", "label"], axcodes="RAS"),
             transforms.Spacingd(keys=["image", "label"], pixdim=(1.0, 1.0, 1.0), mode=("bilinear", "nearest")),
-            TumorGenerated(keys=["image", "label"], prob=0.9), # here we use online 
+            # TumorGenerated(keys=["image", "label"], prob=0.9), # here we use online
+            PancreaticTumorGenerated(keys=["image", "label"], prob=0.9), # here we use online
             transforms.ScaleIntensityRanged(
                 keys=["image"], a_min=-21, a_max=189,
                 b_min=0.0, b_max=1.0, clip=True,
@@ -500,7 +502,7 @@ def main_worker(gpu, args):
     #             num_workers=args.workers,
     #         )
     train_ds = data.SmartCacheDataset(
-                data=datalist,
+                data=datalist,  # Haorui: should this be new_datalist?
                 transform=train_transform,
                 cache_num=args.cache_num,
                 cache_rate=1.0,

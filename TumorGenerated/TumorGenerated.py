@@ -6,6 +6,7 @@ from monai.config.type_definitions import NdarrayOrTensor
 from monai.transforms.transform import MapTransform, RandomizableTransform
 
 from .utils import SynthesisTumor, get_predefined_texture
+from .pancreatic_tumor_synthesis import synthesize_pancreatic_tumor
 import numpy as np
 
 class TumorGenerated(RandomizableTransform, MapTransform):
@@ -45,5 +46,36 @@ class TumorGenerated(RandomizableTransform, MapTransform):
             tumor_type = np.random.choice(self.tumor_types, p=self.tumor_prob.ravel())
             texture = random.choice(self.textures)
             d['image'][0], d['label'][0] = SynthesisTumor(d['image'][0], d['label'][0], tumor_type, texture)
+            # print(tumor_type, d['image'].shape, np.max(d['label']))
+        return d
+
+'''
+Author Haorui. Integrate pancreatic_tumor_synthesis.py into this project.
+This class will be called on the fly to generate tumor.
+'''
+class PancreaticTumorGenerated(RandomizableTransform, MapTransform):
+    def __init__(self,
+                 keys: KeysCollection,
+                 prob: float = 0.1,
+                 tumor_prob=[0.5, 0.5],
+                 allow_missing_keys: bool = False
+                 ) -> None:
+        MapTransform.__init__(self, keys, allow_missing_keys)
+        RandomizableTransform.__init__(self, prob)
+        random.seed(0)
+        np.random.seed(0)
+
+        self.tumor_types = ['cyst', 'pdac']
+
+        assert len(tumor_prob) == 2 and sum(tumor_prob) == 1
+        self.tumor_prob = np.array(tumor_prob)
+
+    def __call__(self, data: Mapping[Hashable, NdarrayOrTensor]) -> Dict[Hashable, NdarrayOrTensor]:
+        d = dict(data)
+        self.randomize(None)
+
+        if self._do_transform and (np.max(d['label']) <= 1):
+            tumor_type = np.random.choice(self.tumor_types, p=self.tumor_prob.ravel())
+            d['image'][0], d['label'][0] = synthesize_pancreatic_tumor(d['image'][0], d['label'][0], tumor_type)
             # print(tumor_type, d['image'].shape, np.max(d['label']))
         return d
