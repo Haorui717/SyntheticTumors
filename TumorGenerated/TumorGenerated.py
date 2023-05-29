@@ -1,4 +1,5 @@
 import random
+from enum import Enum
 from typing import Hashable, Mapping, Dict
 
 from monai.config import KeysCollection
@@ -9,7 +10,15 @@ from .utils import SynthesisTumor, get_predefined_texture
 from .pancreatic_tumor_synthesis import synthesize_pancreatic_tumor
 import numpy as np
 
-class TumorGenerated(RandomizableTransform, MapTransform):
+def tumorGenerateOpts(organ: str, *args, **kwargs):
+    if organ == "liver":
+        return LiverTumorGenerated(*args, **kwargs)
+    elif organ == "pancreatic":
+        return PancreaticTumorGenerated(*args, **kwargs)
+    else:
+        raise ValueError('The organ must \'liver\' or \'pancreatic\'')
+
+class LiverTumorGenerated(RandomizableTransform, MapTransform):
     def __init__(self, 
     keys: KeysCollection, 
     prob: float = 0.1,
